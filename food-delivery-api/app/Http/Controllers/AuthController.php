@@ -58,10 +58,18 @@ class AuthController extends Controller
 
         // Create token
         $token = $user->createToken('auth_token')->plainTextToken;
+        // Get user roles
+        $roles = $user->getRoleNames(); // This gets all role names as a collection
 
         return response()->json([
             'message' => 'Login successful!',
-            'user' => $user,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'roles' => $roles,
+                // Include any other user fields you need
+            ],
             'token' => $token,
         ]);
     }

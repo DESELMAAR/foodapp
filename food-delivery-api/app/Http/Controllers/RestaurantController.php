@@ -17,7 +17,7 @@ class RestaurantController extends Controller
             $user = $request->user();
 
             // For admins - show all, for restaurant owners - show only theirs
-            if ($user->hasRole('admin')) {
+            if ($user->hasRole(['admin','customer'])) {
                 $restaurants = Restaurant::with('menus')->get();
             } else {
                 $restaurants = Restaurant::where('user_id', $user->id)

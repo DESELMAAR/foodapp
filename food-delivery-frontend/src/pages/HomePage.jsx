@@ -57,7 +57,7 @@ const HomePage = () => {
     console.log(itemId,quantity)
 
     try {
-      await apiClient.post('/cart/add', {
+      await apiClient.post('/cart', {
         product_id: itemId,
         quantity: quantity
         

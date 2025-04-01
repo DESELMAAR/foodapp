@@ -47,7 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // 🔹 Restaurant Owner Routes
     Route::middleware('role:restaurant')->group(function () {
         // Restaurants can only manage their own menus
-        Route::apiResource('/menus', MenuController::class)->except(['index']);
+        Route::apiResource('/menus', MenuController::class);
         
         // Restaurants can only manage their own restaurant profile
         Route::put('/restaurants/{restaurant}', [RestaurantController::class, 'update']);
@@ -56,7 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // 🔹 Customer Routes
     Route::middleware('role:customer')->group(function () {
-        Route::apiResource('/cart', CartController::class);
+        Route::apiResource('/cart', CartController::class)->except(['show']);
         Route::get('/cart/count', [CartController::class, 'getCartCount']);
         Route::apiResource('/orders', OrderController::class)->only(['store', 'show']);
     });

@@ -24,7 +24,7 @@ class CartController extends Controller
         ]);
     }
 
-    public function addToCart(Request $request)
+    public function store(Request $request)
     {
         $request->validate([
             'product_id' => 'required',

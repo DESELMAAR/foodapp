@@ -3,11 +3,13 @@ import React, { useState, useEffect } from 'react';
 import apiClient from '../api/apiClient';
 
 const RestaurantManager = () => {
+    const user = JSON.parse(localStorage.getItem("user"))
     const [restaurants, setRestaurants] = useState([]);
     const [formData, setFormData] = useState({
         name: '',
         address: '',
-        phone: ''
+        phone: '',
+        user_id:""
     });
     const [editingId, setEditingId] = useState(null);
 
@@ -27,12 +29,13 @@ const RestaurantManager = () => {
 
     // Handle form input changes
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        setFormData({ ...formData, [e.target.name]: e.target.value ,user_id:user.id});
     };
 
     // Handle form submission for creating or updating a restaurant
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log(user.id)
         try {
             if (editingId) {
                 // Update existing restaurant
@@ -40,6 +43,7 @@ const RestaurantManager = () => {
             } else {
                 // Create new restaurant
                 await apiClient.post('/restaurants', formData);
+                
             }
             setFormData({ name: '', address: '', phone: '' });
             setEditingId(null);

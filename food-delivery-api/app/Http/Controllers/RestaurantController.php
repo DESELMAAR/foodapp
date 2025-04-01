@@ -11,23 +11,27 @@ use Illuminate\Validation\ValidationException;
 class RestaurantController extends Controller
 {
     // Get all restaurants
-    public function index()
+    public function index(Request $request)
     {
         try {
-            // Fetch all restaurants
-            // $orders = Order::with(['user', 'orderItems.menu'])->get();
-            // return response()->json($orders, 200);
-            $restaurants = Restaurant::with('menus')->get();
+            $user = $request->user();
+
+            // For admins - show all, for restaurant owners - show only theirs
+            if ($user->hasRole('admin')) {
+                $restaurants = Restaurant::with('menus')->get();
+            } else {
+                $restaurants = Restaurant::where('user_id', $user->id)
+                    ->with('menus')
+                    ->get();
+            }
+
             return response()->json($restaurants, 200);
 
         } catch (\Exception $e) {
-            // Log the error
             Log::error('Error fetching restaurants: ' . $e->getMessage());
-
-            // Return a generic error response
             return response()->json([
                 'message' => 'An error occurred while fetching restaurants.',
-                'error' => $e->getMessage(), // Only return error details in development
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -41,6 +45,7 @@ class RestaurantController extends Controller
                 'name' => 'required|string',
                 'address' => 'required|string',
                 'phone' => 'required|string',
+                'user_id' => 'required'
             ]);
 
             // Create the restaurant
@@ -143,29 +148,21 @@ class RestaurantController extends Controller
     public function destroy($id)
     {
         try {
-            // Find the restaurant
             $restaurant = Restaurant::findOrFail($id);
 
-            // Delete the restaurant
-            $restaurant->delete();
+            // This will throw an AccessDeniedHttpException if not authorized
+            $this->authorize('delete', $restaurant);
 
-            // Return a success response
+            $restaurant->delete();
             return response()->noContent();
 
         } catch (ModelNotFoundException $e) {
-            // Handle the case where the restaurant is not found
-            return response()->json([
-                'message' => 'Restaurant not found.',
-            ], 404);
-
+            return response()->json(['message' => 'Restaurant not found.'], 404);
         } catch (\Exception $e) {
-            // Log the error
             Log::error('Error deleting restaurant: ' . $e->getMessage());
-
-            // Return a generic error response
             return response()->json([
                 'message' => 'An error occurred while deleting the restaurant.',
-                'error' => $e->getMessage(), // Only return error details in development
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

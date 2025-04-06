@@ -122,7 +122,7 @@ const RestaurantManager = () => {
             key={restaurant.id}
             className="bg-blue-400 p-2 hover:bg-emerald-400 transition-all duration-300 ease-in-out cursor-pointer"
           >
-            <h1>{restaurant.name} </h1> <p>{restaurant.address}</p>{" "}
+            <h1><strong className="text-xl">{restaurant.name}</strong> </h1> <p>{restaurant.address}</p>{" "}
             <p>{restaurant.phone}</p>
             {user.roles[0] === "customer" ? (
               ""

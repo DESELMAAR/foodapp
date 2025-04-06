@@ -5,210 +5,214 @@ namespace App\Http\Controllers;
 use App\Models\Menu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
 
 class MenuController extends Controller
 {
-    // Get all menus
-    // public function index()
-    // {
-    //     try {
-    //         // Fetch all menus with the restaurant relationship
-    //         $menus = Menu::with('restaurant')->get();
-    //         return response()->json($menus, 200);
-
-    //     } catch (\Exception $e) {
-    //         // Log the error
-    //         Log::error('Error fetching menus: ' . $e->getMessage());
-
-    //         // Return a generic error response
-    //         return response()->json([
-    //             'message' => 'An error occurred while fetching menus.',
-    //             'error' => $e->getMessage(), // Only return error details in development
-    //         ], 500);
-    //     }
-    // }
-// Get all menus with optional filtering and pagination
     public function index(Request $request)
     {
         try {
-            // Start building the query
             $query = Menu::query();
-
-            // Add filtering by restaurant_id
+          
             if ($request->has('restaurant_id')) {
                 $query->where('restaurant_id', $request->input('restaurant_id'));
             }
 
-            // Add search functionality (optional: search by name or description)
+            if ($request->has('category')) {
+                $query->where('category', $request->input('category'));
+            }
+
             if ($request->has('search')) {
                 $searchTerm = '%' . $request->input('search') . '%';
                 $query->where(function ($q) use ($searchTerm) {
                     $q->where('name', 'like', $searchTerm)
-                        ->orWhere('description', 'like', $searchTerm);
+                        ->orWhere('description', 'like', $searchTerm)
+                        ->orWhere('category', 'like', $searchTerm);
                 });
             }
 
-            // Add sorting (optional: sort by price, name, etc.)
             if ($request->has('sort_by') && $request->has('sort_order')) {
                 $query->orderBy($request->input('sort_by'), $request->input('sort_order'));
             }
 
-            // Add pagination (default 10 items per page)
-            $menus = $query->with('restaurant')->paginate($request->input('per_page', 10));
+            $menus = $query->with('restaurant:id,name')->paginate($request->input('per_page', 10));
 
-            // Return paginated results
+            // Convert image paths to full URLs
+            $menus->getCollection()->transform(function ($menu) {
+                if ($menu->image_path) {
+                    $menu->image_url = Storage::url($menu->image_path);
+                }
+                return $menu;
+            });
+
             return response()->json($menus, 200);
 
         } catch (\Exception $e) {
-            // Log the error
             Log::error('Error fetching menus: ' . $e->getMessage());
-
-            // Return a generic error response
             return response()->json([
                 'message' => 'An error occurred while fetching menus.',
-                'error' => $e->getMessage(), // Only return error details in development
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
-    // Create a new menu item
+
     public function store(Request $request)
     {
         try {
-            // Validate the request data
             $validated = $request->validate([
                 'restaurant_id' => 'required|exists:restaurants,id',
-                'name' => 'required|string',
+                'name' => 'required|string|max:255',
                 'price' => 'required|numeric|min:0',
                 'description' => 'nullable|string',
+                'category' => 'nullable|string|max:255',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5048', // 2MB max
             ]);
 
-            // Create the menu item
-            $menu = Menu::create($validated);
+            $menuData = $request->except('image');
+            
+            if ($request->hasFile('image')) {
+                $imagePath = $request->file('image')->store('menu_images', 'public');
+                $menuData['image_path'] = $imagePath;
+            }
 
-            // Return the created menu item
+            $menu = Menu::create($menuData);
+            
+            // Add the full URL to the response
+            if ($menu->image_path) {
+                $menu->image_url = Storage::url($menu->image_path);
+            }
+
             return response()->json($menu, 201);
 
         } catch (ValidationException $e) {
-            // Handle validation errors
             return response()->json([
                 'message' => 'Validation error',
                 'errors' => $e->errors(),
             ], 422);
 
         } catch (\Exception $e) {
-            // Log the error
             Log::error('Error creating menu: ' . $e->getMessage());
-
-            // Return a generic error response
             return response()->json([
                 'message' => 'An error occurred while creating the menu.',
-                'error' => $e->getMessage(), // Only return error details in development
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
 
-    // Get a single menu item
     public function show($id)
     {
         try {
-            // Find the menu item with the restaurant relationship
-            $menu = Menu::with('restaurant')->findOrFail($id);
+            $menu = Menu::with('restaurant:id,name')->findOrFail($id);
+            
+            // Add the full URL to the response
+            if ($menu->image_path) {
+                $menu->image_url = Storage::url($menu->image_path);
+            }
+            
             return response()->json($menu, 200);
 
         } catch (ModelNotFoundException $e) {
-            // Handle the case where the menu item is not found
             return response()->json([
                 'message' => 'Menu item not found.',
             ], 404);
 
         } catch (\Exception $e) {
-            // Log the error
             Log::error('Error fetching menu item: ' . $e->getMessage());
-
-            // Return a generic error response
             return response()->json([
                 'message' => 'An error occurred while fetching the menu item.',
-                'error' => $e->getMessage(), // Only return error details in development
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
 
-    // Update a menu item
     public function update(Request $request, $id)
     {
         try {
-            // Find the menu item
             $menu = Menu::findOrFail($id);
 
-            // Validate the request data
             $validated = $request->validate([
                 'restaurant_id' => 'sometimes|exists:restaurants,id',
-                'name' => 'sometimes|string',
+                'name' => 'sometimes|string|max:255',
                 'price' => 'sometimes|numeric|min:0',
                 'description' => 'nullable|string',
+                'category' => 'nullable|string|max:255',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5048', // 2MB max
             ]);
 
-            // Update the menu item
-            $menu->update($validated);
+            $updateData = $request->except('image');
+            
+            // Handle image upload
+            if ($request->hasFile('image')) {
+                // Delete old image if exists
+                if ($menu->image_path) {
+                    Storage::disk('public')->delete($menu->image_path);
+                }
+                
+                $imagePath = $request->file('image')->store('menu_images', 'public');
+                $updateData['image_path'] = $imagePath;
+            }
+            
+            $menu->update($updateData);
+            
+            // Add the full URL to the response
+            if ($menu->image_path) {
+                $menu->image_url = Storage::url($menu->image_path);
+            }
 
-            // Return the updated menu item
             return response()->json($menu, 200);
 
         } catch (ModelNotFoundException $e) {
-            // Handle the case where the menu item is not found
             return response()->json([
                 'message' => 'Menu item not found.',
             ], 404);
 
         } catch (ValidationException $e) {
-            // Handle validation errors
             return response()->json([
                 'message' => 'Validation error',
                 'errors' => $e->errors(),
             ], 422);
 
         } catch (\Exception $e) {
-            // Log the error
             Log::error('Error updating menu item: ' . $e->getMessage());
-
-            // Return a generic error response
             return response()->json([
                 'message' => 'An error occurred while updating the menu item.',
-                'error' => $e->getMessage(), // Only return error details in development
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
 
-    // Delete a menu item
     public function destroy($id)
     {
         try {
-            // Find the menu item
             $menu = Menu::findOrFail($id);
-
-            // Delete the menu item
+            
+            // Delete associated image
+            if ($menu->image_path) {
+                Storage::disk('public')->delete($menu->image_path);
+            }
+            
             $menu->delete();
-
-            // Return a success response
             return response()->noContent();
 
         } catch (ModelNotFoundException $e) {
-            // Handle the case where the menu item is not found
             return response()->json([
                 'message' => 'Menu item not found.',
             ], 404);
 
         } catch (\Exception $e) {
-            // Log the error
             Log::error('Error deleting menu item: ' . $e->getMessage());
-
-            // Return a generic error response
             return response()->json([
                 'message' => 'An error occurred while deleting the menu item.',
-                'error' => $e->getMessage(), // Only return error details in development
+                'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function getMenuCount(Request $request)
+    {
+        $count = Menu::where('restaurant_id', $request->id)->count('id');
+        return response()->json(['count' => $count]);
     }
 }

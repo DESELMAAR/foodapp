@@ -28,6 +28,8 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/restaurants', [RestaurantController::class, 'index']);
+    Route::get('/restaurants/{restaurant}', [RestaurantController::class, 'show']);
+
     // User info endpoint
     Route::get('/user', function (Request $request) {
         return response()->json([
@@ -48,6 +50,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:restaurant')->group(function () {
         // Restaurants can only manage their own menus
         Route::apiResource('/menus', MenuController::class);
+       
+
+
         
         // Restaurants can only manage their own restaurant profile
         Route::put('/restaurants/{restaurant}', [RestaurantController::class, 'update']);

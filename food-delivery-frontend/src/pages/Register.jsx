@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import apiClient from "../api/apiClient";
+import { useNotify } from "../NotifyContextProvider";
 
 const RegisterPage = () => {
+  const { setNotification, notification, setLoad } = useNotify();
+
   const [register, setRegister] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
@@ -12,7 +15,7 @@ const RegisterPage = () => {
     role: "restaurant", // Initial role
   });
   const [error, setError] = useState("");
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -24,7 +27,7 @@ const RegisterPage = () => {
     console.log(formData);
     try {
       const response = await apiClient.post("/register", formData);
-      alert("Registration successful! Please log in.");
+      setNotification("Registration successful! Please log in.");
       navigate("/login"); // Redirect to login page after registration
     } catch (err) {
       if (err.response && err.response.data && err.response.data.message) {
@@ -37,33 +40,36 @@ const RegisterPage = () => {
 
   const handleClickToRegister = () => {
     setRegister(true);
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      role: "restaurant"
+      role: "restaurant",
     }));
   };
 
   const handleClickToCustomer = () => {
     setRegister(false);
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      role: "customer"
+      role: "customer",
     }));
   };
 
   return (
     <div>
-      <div className={register ? "bg-lime-800 bg-opacity-90":"  bg-opacity-90"} style={styles.container}>
+      <div
+        className={register ? "bg-lime-800 bg-opacity-90" : "  bg-opacity-90"}
+        style={styles.container}
+      >
         <div className="grid grid-cols-2 rounded-md overflow-hidden">
-          <button 
+          <button
             className={`py-2 font-semibold px-3 transition-all duration-200 ease-in-out ${
               !register ? "bg-lime-600" : "bg-lime-700 hover:bg-lime-500"
             }`}
             onClick={handleClickToCustomer}
           >
             Customer
-          </button>       
-          <button 
+          </button>
+          <button
             className={`py-2 font-semibold px-3 transition-all duration-200 ease-in-out ${
               register ? "bg-lime-600" : "bg-lime-700 hover:bg-lime-500"
             }`}
@@ -71,7 +77,7 @@ const RegisterPage = () => {
           >
             Restaurant
           </button>
-        </div> 
+        </div>
 
         <h2>Register</h2>
         {error && <p style={styles.error}>{error}</p>}

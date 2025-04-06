@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import apiClient from "../api/apiClient";
+import { useNotify } from "../NotifyContextProvider";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -11,12 +12,13 @@ const Navbar = () => {
   const isAuthenticated = localStorage.getItem("authToken");
   const userString = localStorage.getItem("user");
   const user = userString ? JSON.parse(userString) : null;
+  const { setNotification, notification, setLoad, load } = useNotify();
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !load) {
       fetchCartCount();
     }
-  }, [isAuthenticated, cartItems]); // Update count when cartItems change
+  }, [isAuthenticated, cartItems, load]); // Update count when cartItems change
 
   const fetchCartCount = async () => {
     try {
@@ -29,10 +31,12 @@ const Navbar = () => {
 
   const fetchCartItems = async () => {
     setIsLoading(true);
+    setLoad(true);
     try {
       const response = await apiClient.get("/cart");
       setCartItems(response.data.items || response.data);
-    //   console.log()
+      //   console.log()
+      console.log(response.data.items);
     } catch (error) {
       console.error("Error fetching cart items:", error);
       if (error.response?.status === 401) {
@@ -40,6 +44,7 @@ const Navbar = () => {
       }
     } finally {
       setIsLoading(false);
+      setLoad(false);
     }
   };
 
@@ -52,6 +57,7 @@ const Navbar = () => {
   const handleClickCartIcon = () => {
     if (isAuthenticated) {
       fetchCartItems();
+
       setIsCartOpen(true);
     } else {
       navigate("/login");
@@ -63,12 +69,12 @@ const Navbar = () => {
       await removeCartItem(itemId);
       return;
     }
-
+    setLoad(true);
     try {
       await apiClient.put(`/cart/${itemId}`, { quantity: newQuantity });
       // Update local state optimistically
-      setCartItems(prevItems =>
-        prevItems.map(item =>
+      setCartItems((prevItems) =>
+        prevItems.map((item) =>
           item.id === itemId ? { ...item, quantity: newQuantity } : item
         )
       );
@@ -82,7 +88,9 @@ const Navbar = () => {
   const removeCartItem = async (itemId) => {
     try {
       await apiClient.delete(`/cart/${itemId}`);
-      setCartItems(prevItems => prevItems.filter(item => item.id !== itemId));
+      setCartItems((prevItems) =>
+        prevItems.filter((item) => item.id !== itemId)
+      );
     } catch (error) {
       console.error("Error removing cart item:", error);
       fetchCartItems();
@@ -105,13 +113,20 @@ const Navbar = () => {
 
   const calculateTotal = () => {
     return cartItems.reduce(
-      (total, item) => total + item.product.price * item.quantity,
+      (total, item) => total + item.product?.price * item.quantity,
       0
     );
   };
+  const [details, setDetails] = useState(0);
+  const handleDetails = (id) => {
+    setDetails(id);
+  };
 
+  const handleDetailsReset = () => {
+    setDetails(0);
+  };
   return (
-    <div>
+    <div className="mb-2">
       <nav className="font-semibold py-2 " style={styles.navbar}>
         <div style={styles.left}>
           <Link to="/" style={styles.link}>
@@ -127,6 +142,10 @@ const Navbar = () => {
           {isAuthenticated ? (
             <div style={styles.userSection}>
               <button onClick={handleLogout} style={styles.button}>
+                {" "}
+                <span style={styles.userName}>
+                  Hello, {user.name || "User"}!
+                </span>
                 Logout
               </button>
             </div>
@@ -169,7 +188,7 @@ const Navbar = () => {
       {/* Cart Drawer/Sidebar */}
       {isCartOpen && (
         <div style={styles.cartOverlay}>
-          <div style={styles.cartDrawer}>
+          <div className="rounded-2xl" style={styles.cartDrawer}>
             <div style={styles.cartHeader}>
               <h2>Your Cart ({cartCount})</h2>
               <button onClick={closeCart} style={styles.closeButton}>
@@ -182,56 +201,84 @@ const Navbar = () => {
               ) : cartItems.length > 0 ? (
                 <>
                   <ul style={styles.cartList}>
-                    {cartItems.map((item) => (
-                      <li key={item.id} style={styles.cartItem}>
-                        <div style={styles.itemInfo}>
-                          <span>
-                            <strong>{item.product.name}</strong>
-                          </span>
-                          <span>
-                            ${item.product.price} x {item.quantity}
-                          </span>
-                        </div>
-                        <div style={styles.itemControls}>
-                          <button
-                            onClick={() => handleDecrement(item.id, item.quantity)}
-                            className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-full"
-                            disabled={item.quantity <= 1}
+                    {cartItems.map((item, key) => (
+                      <div key={key}>
+                        <li key={item.id} style={styles.cartItem}>
+                          <img
+                            onClick={() => {
+                              handleDetails(item.id);
+                            }}
+                            className="w-8 cursor-pointer"
+                            src="../src/assets/infos.svg"
+                            alt="details"
+                          />
+                          <div
+                            style={styles.itemInfo}
+                            onClick={handleDetailsReset}
                           >
-                            -
-                          </button>
-                          <span className="mx-2 font-medium">
-                            {item.quantity}
-                          </span>
-                          <button
-                            onClick={() => handleIncrement(item.id, item.quantity)}
-                            className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-full"
-                          >
-                            +
-                          </button>
-                        </div>
-                        <div style={styles.itemTotal}>
-                          ${(item.product.price * item.quantity).toFixed(2)}
-                        </div>
-                        <div style={styles.itembtn}>
-                          <button
-                            onClick={() => removeCartItem(item.id)}
-                            style={styles.removeButton}
-                          >
-                            <img
-                              className="w-5"
-                              src="../src/assets/delete.svg"
-                              alt="delete"
-                            />
-                          </button>
-                        </div>
-                      </li>
+                            <span>
+                              <strong>{item.product?.name}</strong>
+                            </span>
+                            <span>
+                              ${item.product?.price} x {item.quantity}
+                            </span>
+                            {details === item.id && (
+                              <div>
+                                <p>{item.created_at.slice(0, 10)}</p>
+                                <p>restaurant</p>
+                              </div>
+                            )}
+                          </div>
+                          <div style={styles.itemControls}>
+                            <button
+                              onClick={() =>
+                                handleDecrement(item.id, item.quantity)
+                              }
+                              className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-full"
+                              disabled={item.quantity <= 1}
+                            >
+                              -
+                            </button>
+                            <span className="mx-2 font-medium">
+                              {item.quantity}
+                            </span>
+                            <button
+                              onClick={() =>
+                                handleIncrement(item.id, item.quantity)
+                              }
+                              className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-full"
+                            >
+                              +
+                            </button>
+                          </div>
+                          <div style={styles.itemTotal}>
+                            ${(item.product?.price * item.quantity).toFixed(2)}
+                          </div>
+                          <div style={styles.itembtn}>
+                            <button
+                              onClick={() => removeCartItem(item.id)}
+                              style={styles.removeButton}
+                            >
+                              <img
+                                className="w-5"
+                                src="../src/assets/delete.svg"
+                                alt="delete"
+                              />
+                            </button>
+                          </div>
+                        </li>
+                      </div>
                     ))}
                   </ul>
                   <div style={styles.cartSummary}>
-                    <div className="font-bold text-green-700 " style={styles.summaryRow}>
-                      <span className="text-xl" >Subtotal:</span>
-                      <span className="text-xl">${calculateTotal().toFixed(2)}</span>
+                    <div
+                      className="font-bold text-green-700 "
+                      style={styles.summaryRow}
+                    >
+                      <span className="text-xl">Subtotal:</span>
+                      <span className="text-xl">
+                        ${calculateTotal().toFixed(2)}
+                      </span>
                     </div>
                   </div>
                 </>
@@ -283,20 +330,24 @@ const styles = {
   },
   userName: {
     fontSize: "16px",
+    marginRight:"1em"
   },
   link: {
-    color: "#fff",
+    color: "purple",
     textDecoration: "none",
     fontSize: "16px",
   },
   button: {
     // padding: "0px 10px",
-    color: "#fff",
+    color: "white",
     border: "none",
-    borderRadius: "4px",
+    backgroundColor: "rgb(100,103,44)",
+    padding: "0.2em 2em",
+    borderRadius: "30px",
     cursor: "pointer",
     fontSize: "16px",
   },
+  divcart: {},
   cartOverlay: {
     position: "fixed",
     top: 0,
@@ -309,9 +360,10 @@ const styles = {
     justifyContent: "flex-end",
   },
   cartDrawer: {
+    marginTop: "104px",
     width: "400px",
     maxWidth: "90%",
-    height: "100%",
+    height: "600px",
     backgroundColor: "#fff",
     color: "#333",
     display: "flex",
@@ -403,334 +455,3 @@ const styles = {
 };
 
 export default Navbar;
-
-// import React, { useEffect, useState } from "react";
-// import { Link, useNavigate } from "react-router-dom";
-// import apiClient from "../api/apiClient";
-
-// const Navbar = () => {
-//   const navigate = useNavigate();
-//   const [cartCount, setCartCount] = useState(0);
-//   const [isCartOpen, setIsCartOpen] = useState(false);
-//   const [cartItems, setCartItems] = useState([]);
-//   const isAuthenticated = localStorage.getItem("authToken");
-//   const userString = localStorage.getItem("user");
-//   const user = userString ? JSON.parse(userString) : null;
-//   const [quantities, setQuantities] = useState({}); // Track quantities for each menu item
-
-//   useEffect(() => {
-//     if (isAuthenticated) {
-//       fetchCartCount();
-//     }
-//   }, [isAuthenticated]);
-
-//   const fetchCartCount = async () => {
-//     try {
-//       const response = await apiClient.get("/cart/count");
-//       setCartCount(response.data.count);
-//     } catch (error) {
-//       console.error("Error fetching cart count:", error);
-//     }
-//   };
-
-//   const fetchCartItems = async () => {
-//     try {
-//       const response = await apiClient.get("/cart");
-//       setCartItems(response.data.items);
-//       console.log(cartItems);
-//     } catch (error) {
-//       console.error("Error fetching cart items:", error);
-//     }
-//   };
-
-//   const handleLogout = () => {
-//     localStorage.removeItem("authToken");
-//     localStorage.removeItem("user");
-//     navigate("/login");
-//   };
-
-//   const handleClickCartIcon = () => {
-//     if (isAuthenticated) {
-//       fetchCartItems();
-//       setIsCartOpen(true);
-//     } else {
-//       navigate("/login");
-//     }
-//   };
-
-//   const handleDecrement = (itemId) => {
-//     setQuantities(prev => ({
-//       ...prev,
-//       [itemId]: Math.max((prev[itemId] || 0) - 1, 0)
-//     }));
-//   };
-//   const handleIncrement = (itemId) => {
-//     setQuantities(prev => ({
-//       ...prev,
-//       [itemId]: (prev[itemId] || 0) + 1
-//     }));
-//   };
-//   const closeCart = () => {
-//     setIsCartOpen(false);
-//   };
-
-//   return (
-//     <div>
-//       <nav className="font-semibold" style={styles.navbar}>
-//         <div style={styles.left}>
-//           <Link to="/" style={styles.link}>
-//             Home
-//           </Link>
-//           {isAuthenticated && user && (
-//             <Link to="/orders" style={styles.link}>
-//               Orders
-//             </Link>
-//           )}
-//         </div>
-//         <div style={styles.right}>
-//           {isAuthenticated ? (
-//             <div style={styles.userSection}>
-//               <button onClick={handleLogout} style={styles.button}>
-//                 Logout
-//               </button>
-//             </div>
-//           ) : (
-//             <>
-//               <Link to="/login" style={styles.link}>
-//                 Login
-//               </Link>
-//               <Link to="/register" style={styles.link}>
-//                 Register
-//               </Link>
-//             </>
-//           )}
-//         </div>
-//       </nav>
-//       <div className="flex justify-between">
-//         {user && (
-//           <>
-//             <span style={styles.userName}>Hello, {user.name || "User"}!</span>
-//             <div className="relative flex justify-center cursor-pointer">
-//               <img
-//                 className="w-10"
-//                 src="../src/assets/cart.svg"
-//                 alt="cart"
-//                 onClick={handleClickCartIcon}
-//               />
-//               {cartCount > 0 && (
-//                 <span
-//                   className="absolute bottom-1 font-bold text-xl text-blue-800"
-//                   onClick={handleClickCartIcon}
-//                 >
-//                   {cartCount}
-//                 </span>
-//               )}
-//             </div>
-//           </>
-//         )}
-//       </div>
-
-//       {/* Cart Drawer/Sidebar */}
-//       {isCartOpen && (
-//         <div style={styles.cartOverlay}>
-//           <div style={styles.cartDrawer}>
-//             <div style={styles.cartHeader}>
-//               <h2>Your Cart ({cartCount})</h2>
-//               <button onClick={closeCart} style={styles.closeButton}>
-//                 &times;
-//               </button>
-//             </div>
-//             <div style={styles.cartContent}>
-//               {cartItems.length > 0 ? (
-//                 <ul style={styles.cartList}>
-//                   {cartItems.map((item) => (
-//                     <li key={item.id} style={styles.cartItem}>
-//                       <div style={styles.itemInfo}>
-//                         <span>
-//                           <strong>{item.product.name}</strong>
-//                         </span>
-//                         <span>
-//                           ${item.product.price} x {item.quantity}
-//                         </span>
-//                       </div>
-// {/* incrementer */}
-//                       <div className="flex items-center justify-center py-1">
-//                         <button
-//                           onClick={() => handleDecrement(item.id)}
-//                           className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-full"
-//                           disabled={!quantities[item.id]}
-//                         >
-//                           -
-//                         </button>
-//                         <span className="mx-2 font-medium">
-//                           {quantities[item.id] || 0}
-//                         </span>
-//                         <button
-//                           onClick={() => handleIncrement(item.id)}
-//                           className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-full"
-//                         >
-//                           +
-//                         </button>
-//                       </div>
-
-//                       <div style={styles.itemTotal}>
-//                         ${item.product.price * item.quantity}
-//                       </div>
-//                       <div style={styles.itembtn}>
-//                         <img
-//                           className="w-5"
-//                           src="../src/assets/delete.svg"
-//                           alt="delete"
-//                         />
-//                       </div>
-//                     </li>
-//                   ))}
-//                 </ul>
-//               ) : (
-//                 <p>Your cart is empty</p>
-//               )}
-//             </div>
-//             <div style={styles.cartFooter}>
-//               <button
-//                 style={styles.checkoutButton}
-//                 onClick={() => {
-//                   navigate("/checkout");
-//                   closeCart();
-//                 }}
-//               >
-//                 Proceed to Checkout
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// const styles = {
-//   navbar: {
-//     display: "flex",
-//     justifyContent: "space-between",
-//     alignItems: "center",
-//     padding: "10px 20px",
-//     color: "#fff",
-//   },
-//   left: {
-//     display: "flex",
-//     gap: "20px",
-//   },
-//   right: {
-//     display: "flex",
-//     gap: "20px",
-//     alignItems: "center",
-//   },
-//   userSection: {
-//     display: "flex",
-//     alignItems: "center",
-//     gap: "15px",
-//   },
-//   userName: {
-//     fontSize: "16px",
-//   },
-//   link: {
-//     color: "#fff",
-//     textDecoration: "none",
-//     fontSize: "16px",
-//   },
-//   button: {
-//     padding: "0px 10px",
-//     color: "#fff",
-//     border: "none",
-//     borderRadius: "4px",
-//     cursor: "pointer",
-//     fontSize: "16px",
-//   },
-//   cartOverlay: {
-//     position: "fixed",
-//     top: 0,
-//     left: 0,
-//     right: 0,
-//     bottom: 0,
-//     backgroundColor: "rgba(0, 0, 0, 0.5)",
-//     zIndex: 1000,
-//     display: "flex",
-//     justifyContent: "flex-end",
-//   },
-//   cartDrawer: {
-//     width: "400px",
-//     maxWidth: "90%",
-//     height: "100%",
-//     backgroundColor: "#fff",
-//     color: "#333",
-//     display: "flex",
-//     flexDirection: "column",
-//   },
-//   cartHeader: {
-//     padding: "20px",
-//     borderBottom: "1px solid #eee",
-//     display: "flex",
-//     justifyContent: "space-between",
-//     alignItems: "center",
-//   },
-//   closeButton: {
-//     background: "none",
-//     border: "none",
-//     fontSize: "24px",
-//     cursor: "pointer",
-//   },
-//   cartContent: {
-//     flex: 1,
-//     padding: "20px",
-//     overflowY: "auto",
-//   },
-//   cartList: {
-//     listStyle: "none",
-//     padding: 0,
-//     margin: 0,
-//   },
-//   cartItem: {
-//     display: "flex",
-//     justifyContent: "space-between",
-//     justifyContent:"center",
-//     padding: "10px 0",
-//     borderBottom: "1px solid #eee",
-//   },
-//   itemInfo: {
-//     flex: "30%",
-//     display: "flex",
-//     flexDirection: "column",
-//   },
-//   itemTotal: {
-//     flex: "25%",
-//     fontWeight: "bold",
-//     display: "flex",
-//     justifyContent: "center",
-//     alignItems:"center",
-//   },
-//   itembtn: {
-//     flex: "25%",
-//     display: "flex",
-//     justifyContent: "center",
-//     alignItems:"center",
-//   },
-//   itemIncrement: {
-//     flex: "20%",
-//   },
-//   cartFooter: {
-//     padding: "20px",
-//     borderTop: "1px solid #eee",
-//   },
-//   checkoutButton: {
-//     width: "100%",
-//     padding: "10px",
-//     backgroundColor: "#4CAF50",
-//     color: "white",
-//     border: "none",
-//     borderRadius: "4px",
-//     cursor: "pointer",
-//     fontSize: "16px",
-//   },
-// };
-
-// export default Navbar;

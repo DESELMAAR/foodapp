@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import apiClient from "../api/apiClient";
 import { useNotify } from "../NotifyContextProvider";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const AllFood = () => {
+  const navigate = useNavigate();
   const [menuData, setMenuData] = useState({
     items: [],
     currentPage: 1,
@@ -16,6 +17,7 @@ const AllFood = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quantities, setQuantities] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
   const { setNotification } = useNotify();
 
   useEffect(() => {
@@ -42,12 +44,13 @@ const AllFood = () => {
     fetchData();
   }, []);
 
-  const fetchMenuItems = async (page = 1, category = selectedCategory) => {
+  const fetchMenuItems = async (page = 1, category = selectedCategory, search = searchTerm) => {
     try {
       const params = {
         page,
         per_page: menuData.perPage,
         ...(category !== "all" && { category }),
+        ...(search && { search }),
       };
 
       const response = await apiClient.get("/v1/all-food", { params });
@@ -68,11 +71,17 @@ const AllFood = () => {
 
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);
-    fetchMenuItems(1, category);
+    fetchMenuItems(1, category, searchTerm);
   };
 
   const handlePageChange = (page) => {
-    fetchMenuItems(page);
+    fetchMenuItems(page, selectedCategory, searchTerm);
+  };
+
+  const handleSearch = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    fetchMenuItems(1, selectedCategory, term);
   };
 
   const handleIncrement = (itemId) => {
@@ -101,7 +110,12 @@ const AllFood = () => {
       setQuantities((prev) => ({ ...prev, [itemId]: 0 }));
     } catch (err) {
       console.error("Error adding to cart:", err);
-      setNotification("Failed to add item to cart", "error");
+      if (err.response?.status === 401) {
+        setNotification("Please login to add items to cart", "error");
+        navigate("/login");
+      } else {
+        setNotification("Failed to add item to cart", "error");
+      }
     }
   };
 
@@ -120,116 +134,171 @@ const AllFood = () => {
       <h1 className="text-2xl font-bold mb-6 text-center">
         All Available Menu Items
       </h1>
+
       <div className="grid grid-cols-[120px_1fr] gap-4">
         {/* Categories Sidebar */}
-        <div className="flex flex-col gap-2">
-          <Link
-            to="/foods"
-            className="px-4 py-2 rounded-full bg-gray-200 text-center hover:bg-gray-300 transition-colors"
-          >
-            Restaurants
-          </Link>
-          <button
-            onClick={() => handleCategoryChange("all")}
-            className={`px-4 py-2 rounded-full text-center ${
-              selectedCategory === "all"
-                ? "bg-purple-500 text-white"
-                : "bg-gray-200 hover:bg-gray-300"
-            } transition-colors`}
-          >
-            All Items
-          </button>
-          {categories.map((category) => (
+        <div>
+          <div className="flex flex-col gap-2">
+            <Link
+              to="/foods"
+              className="px-4 py-2 rounded-full bg-gray-200 text-center hover:bg-gray-300 transition-colors"
+            >
+              Restaurants
+            </Link>
             <button
-              key={category}
-              onClick={() => handleCategoryChange(category)}
+              onClick={() => handleCategoryChange("all")}
               className={`px-4 py-2 rounded-full text-center ${
-                selectedCategory === category
+                selectedCategory === "all"
                   ? "bg-purple-500 text-white"
                   : "bg-gray-200 hover:bg-gray-300"
               } transition-colors`}
             >
-              {category || "Uncategorized"}
+              All Items
             </button>
-          ))}
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => handleCategoryChange(category)}
+                className={`px-4 py-2 rounded-full text-center ${
+                  selectedCategory === category
+                    ? "bg-purple-500 text-white"
+                    : "bg-gray-200 hover:bg-gray-300"
+                } transition-colors`}
+              >
+                {category || "Uncategorized"}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Menu Items Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {menuData.items.map((item) => (
-            <div
-              key={item.id}
-              className="relative rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group"
-              style={{
-                backgroundImage: item.image_path
-                  ? `url(http://localhost:8000${item.image_url})`
-                  : "linear-gradient(to bottom, #f3f4f6, #e5e7eb)",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                minHeight: "300px",
-              }}
-            >
-              {/* Hover overlay */}
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300"></div>
-
-              {/* Content card */}
-              <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-90 p-4 transform translate-y-10 group-hover:translate-y-0 transition-all duration-300">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-bold text-lg">{item.name}</h3>
-                    <p className="text-gray-700">{item.restaurant?.name}</p>
-                  </div>
-                  <span className="font-bold text-purple-600">
-                    {item.price} DH
-                  </span>
-                </div>
-
-                <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-                  {item.description}
-                </p>
-
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="flex items-center">
-                    <button
-                      onClick={() => handleDecrement(item.id)}
-                      className="bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded-full"
-                      disabled={!quantities[item.id]}
-                    >
-                      -
-                    </button>
-                    <span className="mx-2 font-medium">
-                      {quantities[item.id] || 0}
-                    </span>
-                    <button
-                      onClick={() => handleIncrement(item.id)}
-                      className="bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded-full"
-                    >
-                      +
-                    </button>
-                  </div>
-
-                  <button
-                    onClick={() => handleAddToCart(item.id)}
-                    disabled={!quantities[item.id]}
-                    className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-1 rounded-full transition-colors duration-300 disabled:opacity-50"
-                  >
-                    Add to Cart
-                  </button>
-                </div>
-              </div>
+        <div>
+          <div className="relative mb-4">
+            <input
+              className="w-full rounded-3xl py-2 pl-10 pr-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="Search menu items..."
+              type="search"
+              value={searchTerm}
+              onChange={handleSearch}
+            />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg
+                className="h-5 w-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
             </div>
-          ))}
+          </div>
+
+          {menuData.items.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {menuData.items.map((item) => (
+                <div
+                  key={item.id}
+                  className="relative rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group"
+                  style={{
+                    backgroundImage: item.image_path
+                      ? `url(http://localhost:8000${item.image_url})`
+                      : "linear-gradient(to bottom, #f3f4f6, #e5e7eb)",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    minHeight: "300px",
+                  }}
+                >
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300"></div>
+
+                  {/* Content card */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-90 p-4 transform translate-y-10 group-hover:translate-y-0 transition-all duration-300">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-bold text-lg">{item.name}</h3>
+                        <p className="text-gray-700">{item.restaurant?.name}</p>
+                      </div>
+                      <span className="font-bold text-purple-600">
+                        {item.price} DH
+                      </span>
+                    </div>
+
+                    <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                      {item.description}
+                    </p>
+
+                    <div className="mt-4 flex items-center justify-between">
+                      <div className="flex items-center">
+                        <button
+                          onClick={() => handleDecrement(item.id)}
+                          className="bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded-full"
+                          disabled={!quantities[item.id]}
+                        >
+                          -
+                        </button>
+                        <span className="mx-2 font-medium">
+                          {quantities[item.id] || 0}
+                        </span>
+                        <button
+                          onClick={() => handleIncrement(item.id)}
+                          className="bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded-full"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => handleAddToCart(item.id)}
+                        disabled={!quantities[item.id]}
+                        className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-1 rounded-full transition-colors duration-300 disabled:opacity-50"
+                      >
+                        Add to Cart
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1"
+                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <h3 className="mt-2 text-lg font-medium text-gray-900">
+                No items found
+              </h3>
+              <p className="mt-1 text-gray-500">
+                {searchTerm
+                  ? "Try adjusting your search or filter"
+                  : "No menu items available"}
+              </p>
+            </div>
+          )}
         </div>
       </div>
-      {/* Category Filter */}
 
       {/* Pagination */}
       {menuData.totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2">
+        <div className="flex justify-center items-center gap-2 mt-6">
           <button
             onClick={() => handlePageChange(menuData.currentPage - 1)}
             disabled={menuData.currentPage === 1}
-            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50 hover:bg-gray-300 transition-colors"
           >
             Previous
           </button>
@@ -253,8 +322,8 @@ const AllFood = () => {
                 className={`px-4 py-2 rounded ${
                   menuData.currentPage === pageNum
                     ? "bg-purple-500 text-white"
-                    : "bg-gray-200"
-                }`}
+                    : "bg-gray-200 hover:bg-gray-300"
+                } transition-colors`}
               >
                 {pageNum}
               </button>
@@ -264,7 +333,7 @@ const AllFood = () => {
           <button
             onClick={() => handlePageChange(menuData.currentPage + 1)}
             disabled={menuData.currentPage === menuData.totalPages}
-            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50 hover:bg-gray-300 transition-colors"
           >
             Next
           </button>

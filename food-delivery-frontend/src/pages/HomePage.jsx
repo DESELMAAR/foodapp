@@ -6,10 +6,12 @@ import AddMenuItem from "./AddMenuItem";
 
 const HomePage = () => {
   const [restaurants, setRestaurants] = useState([]);
+  const [filteredRestaurants, setFilteredRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedRestaurantId, setSelectedRestaurantId] = useState(null);
   const [quantities, setQuantities] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
   const { setNotification } = useNotify();
 
   useEffect(() => {
@@ -17,6 +19,7 @@ const HomePage = () => {
       try {
         const response = await apiClient.get("/restaurants");
         setRestaurants(response.data);
+        setFilteredRestaurants(response.data);
       } catch (err) {
         setError("Failed to load restaurants.");
         console.error("Error fetching restaurants:", err);
@@ -27,6 +30,27 @@ const HomePage = () => {
 
     fetchRestaurants();
   }, []);
+
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setFilteredRestaurants(restaurants);
+      return;
+    }
+
+    const filtered = restaurants.filter((restaurant) => {
+      // Check if restaurant name matches
+      const nameMatch = restaurant.name.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Check if any menu item name matches
+      const menuMatch = restaurant.menus.some(menu => 
+        menu.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      
+      return nameMatch || menuMatch;
+    });
+
+    setFilteredRestaurants(filtered);
+  }, [searchTerm, restaurants]);
 
   const handleIncrement = (itemId) => {
     setQuantities((prev) => ({
@@ -79,6 +103,18 @@ const HomePage = () => {
             : restaurant
         )
       );
+      
+      // Also update filtered restaurants
+      setFilteredRestaurants((prev) =>
+        prev.map((restaurant) =>
+          restaurant.id === restaurantId
+            ? {
+                ...restaurant,
+                menus: restaurant.menus.filter((item) => item.id !== itemId),
+              }
+            : restaurant
+        )
+      );
     } catch (err) {
       console.error("Error deleting menu item:", err);
       setNotification("Failed to delete menu item", "error");
@@ -93,7 +129,7 @@ const HomePage = () => {
     return <div>{error}</div>;
   }
 
-  const selectedRestaurant = restaurants.find(
+  const selectedRestaurant = filteredRestaurants.find(
     (restaurant) => restaurant.id === selectedRestaurantId
   );
 
@@ -110,7 +146,7 @@ const HomePage = () => {
         </div>
 
         <div className="grid grid-flow-row gap-6 mb-8">
-          {restaurants.map((restaurant) => (
+          {filteredRestaurants.map((restaurant) => (
             <div
               key={restaurant.id}
               className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group"
@@ -177,6 +213,13 @@ const HomePage = () => {
                           : r
                       )
                     );
+                    setFilteredRestaurants((prev) =>
+                      prev.map((r) =>
+                        r.id === restaurant.id
+                          ? { ...r, menus: [...r.menus, newItem] }
+                          : r
+                      )
+                    );
                   }}
                   className="mt-4"
                 />
@@ -199,10 +242,23 @@ const HomePage = () => {
         </div>
       </div>
 
-      <div className="p-4">
+      <div className="">
+      <input
+              className="w-full rounded-3xl py-2 pl-10 mb-4 pr-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="Search menu items..."
+              type="search"
+              value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+            />
+       
         {selectedRestaurant ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {selectedRestaurant.menus.map((item) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {selectedRestaurant.menus
+              .filter(menu => 
+                searchTerm === "" || 
+                menu.name.toLowerCase().includes(searchTerm.toLowerCase())
+              )
+              .map((item) => (
               <div
                 key={item.id}
                 className="relative rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 group h-full"
@@ -318,23 +374,15 @@ const HomePage = () => {
               />
             </svg>
             <p className="mt-4 text-lg text-gray-600">
-              Select a restaurant to view its menu
+              {filteredRestaurants.length === 0 && searchTerm
+                ? "No restaurants or menu items match your search"
+                : "Select a restaurant to view its menu"}
             </p>
           </div>
         )}
       </div>
     </div>
   );
-};
-
-const styles = {
-  card: {
-    border: "1px solid #ccc",
-    borderRadius: "8px",
-    padding: "16px",
-    width: "250px",
-    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-  },
 };
 
 export default HomePage;

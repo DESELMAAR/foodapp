@@ -11,13 +11,14 @@ import "./app.css";
 import RestaurantManager from "./pages/RestaurantManager";
 import { ContextProvider, useNotify } from "./NotifyContextProvider";
 import CheckoutPage from "./pages/CheckoutPage";
+import AllFood from "./pages/AllFood";
 
 const App = () => {
   const { setNotification, notification, setLoad } = useNotify();
 
   return (
     <ContextProvider>
-      <div className="bg-cyan-50 bg-opacity-90 p-4 rounded-xl app backdrop-blur-2xl">
+      <div className="bg-cyan-50 bg-opacity-90 overflow-hidden p-4 rounded-xl app backdrop-blur-2xl">
         <Router>
           <Navbar />
           <Routes>
@@ -25,9 +26,12 @@ const App = () => {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
+            <Route path="/" element={<AllFood />} />
+
             {/* Protected Routes */}
+
             <Route
-              path="/"
+              path="/foods"
               element={
                 <ProtectedRoute>
                   <HomePage />

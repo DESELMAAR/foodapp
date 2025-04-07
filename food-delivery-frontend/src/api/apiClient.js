@@ -1,19 +1,27 @@
-
-import axios from 'axios';
+import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
+const getAllFood = (params = {}) => {
+  return apiClient.get("/all-food", { params });
+};
+
+const getFoodCategories = () => {
+  return apiClient.get("/all-food/categories");
+};
+
+export { getAllFood, getFoodCategories };
 // Add a request interceptor to include the auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem("authToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -35,13 +43,13 @@ apiClient.interceptors.response.use(
     // Handle response errors
     if (error.response) {
       // Server responded with a status code outside the 2xx range
-      console.error('API Error:', error.response.data);
+      console.error("API Error:", error.response.data);
     } else if (error.request) {
       // No response received from the server
-      console.error('No response received:', error.request);
+      console.error("No response received:", error.request);
     } else {
       // Something else went wrong
-      console.error('Error:', error.message);
+      console.error("Error:", error.message);
     }
     return Promise.reject(error);
   }

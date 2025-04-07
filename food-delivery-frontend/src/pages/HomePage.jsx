@@ -99,125 +99,228 @@ const HomePage = () => {
 
   return (
     <div className="grid grid-cols-[30%_69%] gap-[1%]">
-      <div className="bg-white bg-opacity-90 backdrop-blur-sm p-4">
-        <h1 className="font-bold text-indigo-900">Welcome to Food Delivery</h1>
-        <p className="text-white">
-          Explore our restaurants and place your order today!
-        </p>
+      <div className="bg-white/90 backdrop-blur-md p-6 rounded-xl shadow-lg">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-indigo-800 mb-2">
+            Welcome to Food Delivery
+          </h1>
+          <p className="text-indigo-600 font-medium">
+            Explore our restaurants and place your order today!
+          </p>
+        </div>
 
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "20px",
-            justifyContent: "center",
-          }}
-        >
+        <div className="grid grid-flow-row gap-6 mb-8">
           {restaurants.map((restaurant) => (
             <div
-              className="bg-slate-50 cursor-pointer"
               key={restaurant.id}
-              style={styles.card}
+              className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group"
               onClick={() => handleRestaurantClick(restaurant.id)}
             >
-              <h3>{restaurant.name}</h3>
-              <p>{restaurant.address}</p>
-              <p>{restaurant.phone}</p>
-              <button>
-                <strong>Variety Meal:</strong> {restaurant.menus.length}
-              </button>
-              <br />
+              <div className="p-5">
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="text-lg font-bold text-gray-800 group-hover:text-indigo-600 transition-colors">
+                    {restaurant.name}
+                  </h3>
+                  <span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2 py-1 rounded-full">
+                    {restaurant.menus.length} items
+                  </span>
+                </div>
 
-              <AddMenuItem
-                restaurantId={restaurant.id}
-                onItemAdded={(newItem) => {
-                  setRestaurants((prev) =>
-                    prev.map((r) =>
-                      r.id === restaurant.id
-                        ? { ...r, menus: [...r.menus, newItem] }
-                        : r
-                    )
-                  );
-                }}
-              />
+                <div className="space-y-2 text-sm text-gray-600 mb-4">
+                  <p className="flex items-center">
+                    <svg
+                      className="w-4 h-4 mr-2 text-indigo-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                    {restaurant.address}
+                  </p>
+                  <p className="flex items-center">
+                    <svg
+                      className="w-4 h-4 mr-2 text-indigo-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                      />
+                    </svg>
+                    {restaurant.phone}
+                  </p>
+                </div>
+
+                <AddMenuItem
+                  restaurantId={restaurant.id}
+                  onItemAdded={(newItem) => {
+                    setRestaurants((prev) =>
+                      prev.map((r) =>
+                        r.id === restaurant.id
+                          ? { ...r, menus: [...r.menus, newItem] }
+                          : r
+                      )
+                    );
+                  }}
+                  className="mt-4"
+                />
+              </div>
             </div>
           ))}
         </div>
 
-        <button className="bg-green-700 my-2 font-semibold px-4 py-2 rounded-full bg-opacity-50 hover:bg-teal-600 hover:text-white transition-all duration-300">
-          Make Order Now
-        </button>
+        <div className="flex flex-wrap gap-4 justify-center">
+          <button className="bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold px-6 py-3 rounded-full hover:shadow-lg transition-all duration-300 hover:opacity-90">
+            Make Order Now
+          </button>
 
-        <Link
-          to="/restaurant"
-          className="bg-green-700 my-2 font-semibold px-4 py-2 rounded-full bg-opacity-50 hover:bg-teal-600 hover:text-white transition-all duration-300"
-        >
-          Add new restaurant
-        </Link>
+          <Link
+            to="/restaurant"
+            className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold px-6 py-3 rounded-full hover:shadow-lg transition-all duration-300 hover:opacity-90"
+          >
+            Add new restaurant
+          </Link>
+        </div>
       </div>
 
-      <div className="menu grid grid-cols-2 gap-2">
+      <div className="p-4">
         {selectedRestaurant ? (
-          selectedRestaurant.menus.map((item) => (
-            <div  key={item.id}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {selectedRestaurant.menus.map((item) => (
               <div
-               
-                
-                className="grid grid-cols-3 rounded-lg h-full group relative overflow-hidden transition-all duration-300 hover:shadow-lg"
+                key={item.id}
+                className="relative rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 group h-full"
               >
-                {/* Background overlay that scales on hover */}
-                <div style={{
-                  backgroundImage: `url(http://localhost:8000/storage/${item.image_path})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  backgroundRepeat: "no-repeat",
-                }} className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 transform group-hover:scale-105"></div>
+                {/* Background image with hover effect */}
+                <div
+                  style={{
+                    backgroundImage: item.image_path
+                      ? `url(http://localhost:8000/storage/${item.image_path})`
+                      : "linear-gradient(to bottom, #f3f4f6, #e5e7eb)",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                  className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300"
+                ></div>
 
-                <div className="card bg-white rounded-xl bg-opacity-80 backdrop-blur-xl z-10">
-                  <div className="">
-                    <h1 className="font-semibold text-lg">{item.name}</h1>
-                    <p className="text-gray-800 font-medium">{item.price}DH</p>
-                    <div className="flex items-center justify-center py-1">
+                {/* Content card */}
+                <div className="relative p-4 h-full flex flex-col">
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="text-lg font-bold text-gray-800 group-hover:text-indigo-600 transition-colors">
+                        {item.name}
+                      </h3>
+                      <span className="bg-indigo-100 text-indigo-800 text-sm font-semibold px-2 py-1 rounded-full">
+                        {item.price} DH
+                      </span>
+                    </div>
+
+                    {/* Quantity selector */}
+                    <div className="flex items-center justify-center my-4">
                       <button
                         onClick={() => handleDecrement(item.id)}
-                        className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-full"
+                        className="bg-gray-200 hover:bg-gray-300 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
                         disabled={!quantities[item.id]}
                       >
-                        -
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M20 12H4"
+                          />
+                        </svg>
                       </button>
-                      <span className="mx-2 font-medium">
+                      <span className="mx-3 font-medium text-lg">
                         {quantities[item.id] || 0}
                       </span>
                       <button
                         onClick={() => handleIncrement(item.id)}
-                        className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-full"
+                        className="bg-gray-200 hover:bg-gray-300 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
                       >
-                        +
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                          />
+                        </svg>
                       </button>
                     </div>
                   </div>
 
-                  <button
-                    className="w-full bg-slate-100 py-2 font-semibold rounded-full bg-opacity-70 hover:bg-opacity-100 transition-all duration-300 mb-2"
-                    onClick={() => handleAddToCart(item.id)}
-                    disabled={!quantities[item.id]}
-                  >
-                    Add to Cart
-                  </button>
-                  <button
-                    className="w-full bg-red-100 py-2 font-semibold rounded-full bg-opacity-70 hover:bg-opacity-100 transition-all duration-300"
-                    onClick={() =>
-                      handleDeleteItem(item.id, selectedRestaurant.id)
-                    }
-                  >
-                    Delete
-                  </button>
+                  {/* Action buttons */}
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => handleAddToCart(item.id)}
+                      disabled={!quantities[item.id]}
+                      className={`w-full py-2 font-semibold rounded-lg transition-all duration-300 ${
+                        quantities[item.id]
+                          ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-md"
+                          : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      }`}
+                    >
+                      Add to Cart
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleDeleteItem(item.id, selectedRestaurant.id)
+                      }
+                      className="w-full py-2 font-semibold bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg hover:shadow-md transition-all duration-300"
+                    >
+                      Delete Item
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         ) : (
-          <p className="text-gray-600">Select a restaurant to view its menu.</p>
+          <div className="text-center py-12">
+            <svg
+              className="w-16 h-16 mx-auto text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <p className="mt-4 text-lg text-gray-600">
+              Select a restaurant to view its menu
+            </p>
+          </div>
         )}
       </div>
     </div>

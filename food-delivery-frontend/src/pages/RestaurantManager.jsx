@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-// import axios from 'axios';
 import apiClient from "../api/apiClient";
 import MenuManager from "./MenuManager";
 
@@ -13,11 +12,11 @@ const RestaurantManager = () => {
     user_id: "",
   });
   const [editingId, setEditingId] = useState(null);
+  const [showMenuManager, setShowMenuManager] = useState(false);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState(null);
 
-  // Fetch all restaurants
   useEffect(() => {
     fetchRestaurants();
-    console.log(user.roles[0]);
   }, []);
 
   const fetchRestaurants = async () => {
@@ -29,7 +28,6 @@ const RestaurantManager = () => {
     }
   };
 
-  // Handle form input changes
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -38,27 +36,22 @@ const RestaurantManager = () => {
     });
   };
 
-  // Handle form submission for creating or updating a restaurant
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(user.roles);
     try {
       if (editingId) {
-        // Update existing restaurant
         await apiClient.put(`/restaurants/${editingId}`, formData);
       } else {
-        // Create new restaurant
         await apiClient.post("/restaurants", formData);
       }
       setFormData({ name: "", address: "", phone: "" });
       setEditingId(null);
-      fetchRestaurants(); // Refresh the list
+      fetchRestaurants();
     } catch (error) {
       console.error("Error saving restaurant:", error);
     }
   };
 
-  // Edit a restaurant
   const handleEdit = (restaurant) => {
     setFormData({
       name: restaurant.name,
@@ -68,97 +61,139 @@ const RestaurantManager = () => {
     setEditingId(restaurant.id);
   };
 
-  // Delete a restaurant
   const handleDelete = async (id) => {
     try {
       await apiClient.delete(`/restaurants/${id}`);
-      fetchRestaurants(); // Refresh the list
+      fetchRestaurants();
     } catch (error) {
-      // console.error('Error deleting restaurant:', error);
+      console.error("Error deleting restaurant:", error);
     }
   };
 
-  const [showMenuManager, setShowMenuManager] = useState(false);
-  const [selectedRestaurantId, setSelectedRestaurantId] = useState(null);
   const handleMenuClick = (restaurantId) => {
     setSelectedRestaurantId(restaurantId);
     setShowMenuManager(true);
   };
 
   return (
-    <div>
-      <h1>Restaurant Manager</h1>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="name"
-          placeholder="Name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="text"
-          name="address"
-          placeholder="Address"
-          value={formData.address}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="text"
-          name="phone"
-          placeholder="Phone"
-          value={formData.phone}
-          onChange={handleChange}
-          required
-        />
-        <button type="submit">{editingId ? "Update" : "Create"}</button>
-      </form>
-
-      <ul className="grid grid-cols-3 mt-4 max-md:grid-cols-1  gap-2 justify-center">
-        {restaurants.map((restaurant) => (
-          <li
-            key={restaurant.id}
-            className="bg-blue-400 p-2 hover:bg-emerald-400 transition-all duration-300 ease-in-out cursor-pointer"
-          >
-            <h1><strong className="text-xl">{restaurant.name}</strong> </h1> <p>{restaurant.address}</p>{" "}
-            <p>{restaurant.phone}</p>
-            {user.roles[0] === "customer" ? (
-              ""
-            ) : (
-              <>
-                <button
-                  className="px-3 font-semibold transition-all duration-300 bg-slate-50 bg-opacity-50 hover:bg-opacity-90 mr-2 "
-                  onClick={() => handleEdit(restaurant)}
-                >
-                  Edit
-                </button>
-                <button
-                  className="px-3 font-semibold transition-all duration-300 bg-red-300 bg-opacity-50 hover:bg-opacity-90 mr-2"
-                  onClick={() => handleDelete(restaurant.id)}
-                >
-                  Delete
-                </button>
-
-                <button
-                  className="px-3 font-semibold transition-all duration-300 bg-blue-500 bg-opacity-50 hover:bg-opacity-90 "
-                  onClick={() => handleMenuClick(restaurant.id)}
-                >
-                  My menu
-                </button>
-              </>
-            )}
-          </li>
-         
-        ))}
-      </ul>
-      {showMenuManager && (
-            <MenuManager 
-              restaurantId={selectedRestaurantId} 
-              onClose={() => setShowMenuManager(false)} 
+    <div className="max-w-6xl mx-auto p-6">
+      <div className="bg-white/90 backdrop-blur-md rounded-xl shadow-lg p-6 mb-8">
+        <h1 className="text-3xl font-bold text-indigo-800 mb-6">Restaurant Manager</h1>
+        
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input
+              type="text"
+              name="name"
+              placeholder="Restaurant Name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              required
             />
-          )}
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+            <input
+              type="text"
+              name="address"
+              placeholder="Restaurant Address"
+              value={formData.address}
+              onChange={handleChange}
+              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+            <input
+              type="text"
+              name="phone"
+              placeholder="Phone Number"
+              value={formData.phone}
+              onChange={handleChange}
+              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              required
+            />
+          </div>
+          
+          <div className="flex items-end">
+            <button
+              type="submit"
+              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300"
+            >
+              {editingId ? "Update Restaurant" : "Add Restaurant"}
+            </button>
+          </div>
+        </form>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {restaurants.map((restaurant) => (
+            <div
+              key={restaurant.id}
+              className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
+            >
+              <div className="p-5">
+                <div className="flex justify-between items-start mb-3">
+                  <h2 className="text-xl font-bold text-gray-800">{restaurant.name}</h2>
+                  <span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2 py-1 rounded-full">
+                    ID: {restaurant.id}
+                  </span>
+                </div>
+                
+                <div className="space-y-2 text-sm text-gray-600 mb-4">
+                  <p className="flex items-center">
+                    <svg className="w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {restaurant.address}
+                  </p>
+                  <p className="flex items-center">
+                    <svg className="w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    {restaurant.phone}
+                  </p>
+                </div>
+
+                {user.roles[0] !== "customer" && (
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => handleEdit(restaurant)}
+                      className="px-4 py-2 bg-indigo-100 text-indigo-700 font-medium rounded-lg hover:bg-indigo-200 transition-colors duration-300"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(restaurant.id)}
+                      className="px-4 py-2 bg-red-100 text-red-700 font-medium rounded-lg hover:bg-red-200 transition-colors duration-300"
+                    >
+                      Delete
+                    </button>
+                    <button
+                      onClick={() => handleMenuClick(restaurant.id)}
+                      className="px-4 py-2 bg-green-100 text-green-700 font-medium rounded-lg hover:bg-green-200 transition-colors duration-300"
+                    >
+                      Manage Menu
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {showMenuManager && (
+        <MenuManager 
+          restaurantId={selectedRestaurantId} 
+          onClose={() => setShowMenuManager(false)} 
+        />
+      )}
     </div>
   );
 };

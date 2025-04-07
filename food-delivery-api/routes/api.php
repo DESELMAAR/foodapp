@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AllFoodController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderItemController;
@@ -16,6 +17,15 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+Route::group(['prefix' => 'v1'], function() {
+    // ... other routes
+    
+    // All Food routes
+    Route::group(['prefix' => 'all-food'], function() {
+        Route::get('/', [AllFoodController::class, 'index']);
+        Route::get('/categories', [AllFoodController::class, 'categories']);
+    });
+});
 // 🔹 Public Routes (No Authentication Required)
 Route::get('/restaurants', [RestaurantController::class, 'index']);
 Route::get('/menus', [MenuController::class, 'index']);

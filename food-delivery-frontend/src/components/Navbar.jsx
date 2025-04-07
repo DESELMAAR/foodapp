@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import apiClient from "../api/apiClient";
 import { useNotify } from "../NotifyContextProvider";
+import LoadingAnimation from "./LoadingAnimation";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -128,7 +129,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Left side navigation */}
           <div className="flex items-center space-x-8">
-            <Link to="/" className="text-indigo-600 font-bold text-lg">
+            <Link to="/" className="text-indigo-600 font-bold text-lg caveat">
               FoodDelivery
             </Link>
             {isAuthenticated && user && (
@@ -220,9 +221,8 @@ const Navbar = () => {
 
                     <div className="mt-8">
                       {isLoading ? (
-                        <div className="flex justify-center py-12">
-                          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-                        </div>
+                       <LoadingAnimation/>
+
                       ) : cartItems.length > 0 ? (
                         <div className="flow-root">
                           <ul className="-my-6 divide-y divide-gray-200">
@@ -241,6 +241,7 @@ const Navbar = () => {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                       </svg>
                                     </div>
+                                    // <LoadingAnimation/>
                                   )}
                                 </div>
 

@@ -3,7 +3,44 @@ import apiClient from "../api/apiClient";
 import { Link } from "react-router-dom";
 import { useNotify } from "../NotifyContextProvider";
 import AddMenuItem from "./AddMenuItem";
+// import LoadingAnimation from "../components/LoadingAnimation";
 
+// Loading Component
+const LoadingAnimation = () => {
+  const letters = "FoodDelivery".split('');
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % letters.length);
+    }, 200);
+    return () => clearInterval(interval);
+  }, [letters.length]);
+
+  const getColor = (index) => {
+    const distance = Math.abs(index - activeIndex);
+    if (distance === 0) return 'text-indigo-600';
+    if (distance < 3) return 'text-purple-500';
+    if (distance < 6) return 'text-pink-500';
+    return 'text-gray-400';
+  };
+
+  return (
+    <div className="flex justify-center items-center h-screen">
+      <div className="text-4xl font-bold tracking-wider">
+        {letters.map((letter, index) => (
+          <span 
+            key={index} 
+            className={`transition-colors duration-300 caveat ${getColor(index)}`}
+            style={{ transitionDelay: `${index * 50}ms` }}
+          >
+            {letter}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
 const HomePage = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [filteredRestaurants, setFilteredRestaurants] = useState([]);
@@ -38,14 +75,10 @@ const HomePage = () => {
     }
 
     const filtered = restaurants.filter((restaurant) => {
-      // Check if restaurant name matches
       const nameMatch = restaurant.name.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      // Check if any menu item name matches
       const menuMatch = restaurant.menus.some(menu => 
         menu.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      
       return nameMatch || menuMatch;
     });
 
@@ -92,7 +125,6 @@ const HomePage = () => {
       await apiClient.delete(`/menus/${itemId}`);
       setNotification("Menu item deleted successfully!", "success");
 
-      // Update the state to remove the deleted item
       setRestaurants((prev) =>
         prev.map((restaurant) =>
           restaurant.id === restaurantId
@@ -104,7 +136,6 @@ const HomePage = () => {
         )
       );
       
-      // Also update filtered restaurants
       setFilteredRestaurants((prev) =>
         prev.map((restaurant) =>
           restaurant.id === restaurantId
@@ -122,11 +153,11 @@ const HomePage = () => {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <LoadingAnimation />;
   }
 
   if (error) {
-    return <div>{error}</div>;
+    return <div className="text-center py-12 text-red-500 text-xl">{error}</div>;
   }
 
   const selectedRestaurant = filteredRestaurants.find(
@@ -135,6 +166,7 @@ const HomePage = () => {
 
   return (
     <div className="grid grid-cols-[30%_69%] gap-[1%]">
+      {/* Left sidebar */}
       <div className="bg-white/90 backdrop-blur-md p-6 rounded-xl shadow-lg">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-indigo-800 mb-2">
@@ -242,15 +274,15 @@ const HomePage = () => {
         </div>
       </div>
 
+      {/* Right content */}
       <div className="">
-      <input
-              className="w-full rounded-3xl py-2 pl-10 mb-4 pr-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              placeholder="Search menu items..."
-              type="search"
-              value={searchTerm}
+        <input 
+          className="w-full rounded-3xl mb-4 py-2 pl-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          placeholder="Search restaurants or menu items..." 
+          type="search"
+          value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-            />
-       
+        />
         {selectedRestaurant ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {selectedRestaurant.menus
@@ -263,7 +295,6 @@ const HomePage = () => {
                 key={item.id}
                 className="relative rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 group h-full"
               >
-                {/* Background image with hover effect */}
                 <div
                   style={{
                     backgroundImage: item.image_path
@@ -275,7 +306,6 @@ const HomePage = () => {
                   className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300"
                 ></div>
 
-                {/* Content card */}
                 <div className="relative p-4 h-full flex flex-col">
                   <div className="flex-grow">
                     <div className="flex justify-between items-start mb-2">
@@ -287,7 +317,6 @@ const HomePage = () => {
                       </span>
                     </div>
 
-                    {/* Quantity selector */}
                     <div className="flex items-center justify-center my-4">
                       <button
                         onClick={() => handleDecrement(item.id)}
@@ -332,7 +361,6 @@ const HomePage = () => {
                     </div>
                   </div>
 
-                  {/* Action buttons */}
                   <div className="space-y-2">
                     <button
                       onClick={() => handleAddToCart(item.id)}

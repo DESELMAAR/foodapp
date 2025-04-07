@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import apiClient from "../api/apiClient";
 import { useNotify } from "../NotifyContextProvider";
 import { Link, useNavigate } from "react-router-dom";
+import LoadingAnimation from "../components/LoadingAnimation";
 
 const AllFood = () => {
   const navigate = useNavigate();
@@ -121,7 +122,8 @@ const AllFood = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">Loading...</div>
+    //   <div className="flex justify-center items-center h-64">Loading...</div>
+      <LoadingAnimation/>
     );
   }
 
@@ -131,7 +133,7 @@ const AllFood = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-6 text-center">
+      <h1 className="text-2xl font-bold mb-6 text-center caveat">
         All Available Menu Items
       </h1>
 

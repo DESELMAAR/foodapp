@@ -74,3 +74,11 @@ body{
 .animate-fade-in {
   animation: fade-in 0.3s ease-out forwards;
 }
+
+.caveat {
+  font-family: "Caveat", cursive;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-style: normal;
+  font-size: 39px;
+}

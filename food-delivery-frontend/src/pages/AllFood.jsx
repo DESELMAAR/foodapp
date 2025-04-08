@@ -137,7 +137,7 @@ const AllFood = () => {
         All Available Menu Items
       </h1>
 
-      <div className="grid grid-cols-[120px_1fr] gap-4">
+      <div className="grid grid-cols-[180px_1fr] gap-4">
         {/* Categories Sidebar */}
         <div>
           <div className="flex flex-col gap-2">
@@ -177,7 +177,7 @@ const AllFood = () => {
         <div>
           <div className="relative mb-4">
             <input
-              className="w-full rounded-3xl py-2 pl-10 pr-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full rounded-3xl py-2 pl-10 pr-4 border transition-all duration-300 border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
               placeholder="Search menu items..."
               type="search"
               value={searchTerm}
@@ -201,7 +201,7 @@ const AllFood = () => {
           </div>
 
           {menuData.items.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {menuData.items.map((item) => (
                 <div
                   key={item.id}
@@ -219,7 +219,7 @@ const AllFood = () => {
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300"></div>
 
                   {/* Content card */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-90 p-4 transform translate-y-10 group-hover:translate-y-0 transition-all duration-300">
+                  <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-90 pb-1 pl-1 pr-1 transform translate-y-10 group-hover:translate-y-0 transition-all duration-300">
                     <div className="flex justify-between items-start">
                       <div>
                         <h3 className="font-bold text-lg">{item.name}</h3>
@@ -230,9 +230,9 @@ const AllFood = () => {
                       </span>
                     </div>
 
-                    <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                    {/* <p className="text-sm text-gray-600 mt-2 line-clamp-2">
                       {item.description}
-                    </p>
+                    </p> */}
 
                     <div className="mt-4 flex items-center justify-between">
                       <div className="flex items-center">

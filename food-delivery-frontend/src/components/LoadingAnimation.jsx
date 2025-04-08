@@ -20,7 +20,7 @@ const LoadingAnimation = () => {
   };
 
   return (
-    <div className="flex justify-center items-center h-96 ">
+    <div className="flex justify-center items-center h-60 ">
       <div className="text-4xl font-bold tracking-wider">
         {letters.map((letter, index) => (
           <span 

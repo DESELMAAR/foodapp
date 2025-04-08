@@ -203,7 +203,7 @@ const Navbar = () => {
             ></div>
             <div className="fixed inset-y-0 right-0 pl-10 max-w-full flex">
               <div className="w-screen max-w-md">
-                <div className="cartdiv mt-24 flex flex-col bg-white shadow-xl">
+                <div className="cartdiv mt-20 flex flex-col mr-4 rounded-2xl bg-white shadow-xl">
                   <div className="flex-1 py-6 overflow-y-auto h-96 px-4 sm:px-6">
                     <div className="flex items-start justify-between">
                       <h2 className="text-lg font-medium text-gray-900">
@@ -323,7 +323,7 @@ const Navbar = () => {
                             navigate("/checkout");
                             closeCart();
                           }}
-                          className="w-full flex justify-center items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                          className="bg-gradient-to-r mx-auto  from-purple-600 to-indigo-600 text-white py-2 px-8 rounded-full shadow-md hover:shadow-lg transition-all duration-300 flex items-center"
                         >
                           Checkout
                         </button>

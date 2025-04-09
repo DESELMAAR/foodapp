@@ -3,6 +3,7 @@
 use App\Http\Controllers\AllFoodController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\MenuLikeController;
 use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\MenuController;
@@ -17,11 +18,11 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::group(['prefix' => 'v1'], function() {
+Route::group(['prefix' => 'v1'], function () {
     // ... other routes
-    
+
     // All Food routes
-    Route::group(['prefix' => 'all-food'], function() {
+    Route::group(['prefix' => 'all-food'], function () {
         Route::get('/', [AllFoodController::class, 'index']);
         Route::get('/categories', [AllFoodController::class, 'categories']);
     });
@@ -60,10 +61,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:restaurant')->group(function () {
         // Restaurants can only manage their own menus
         Route::apiResource('/menus', MenuController::class);
-       
 
 
-        
+
+
         // Restaurants can only manage their own restaurant profile
         Route::put('/restaurants/{restaurant}', [RestaurantController::class, 'update']);
         Route::delete('/restaurants/{restaurant}', [RestaurantController::class, 'destroy']);
@@ -77,15 +78,23 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // 🔹 Shared Routes
-    
+
     // Restaurant creation (admin or restaurant owner)
     Route::middleware('can:create,App\Models\Restaurant')->post('/restaurants', [RestaurantController::class, 'store']);
-    
+
     // Order management (admin or restaurant)
     Route::middleware('role:admin|restaurant')->group(function () {
         Route::apiResource('/orders', OrderController::class)->except(['store']);
     });
-    
+
     // Public view endpoints (available to all authenticated users)
     Route::get('/restaurants/{restaurant}', [RestaurantController::class, 'show']);
+
+
+    // likes 
+
+    Route::post('/menus/{menu}/like', [MenuLikeController::class, 'like']);
+    Route::post('/menus/{menu}/unlike', [MenuLikeController::class, 'unlike']);
+    Route::get('/menus/{menu}/check-like', [MenuLikeController::class, 'checkLike']);
+    Route::get('/user/likes', [MenuLikeController::class, 'getLikedMenus']);
 });

@@ -17,7 +17,12 @@ const getFoodCategories = () => {
   return apiClient.get("/all-food/categories");
 };
 
-export { getAllFood, getFoodCategories };
+const likeMenu = (menuId) => apiClient.post(`/menus/${menuId}/like`);
+const unlikeMenu = (menuId) => apiClient.post(`/menus/${menuId}/like`); // Same endpoint for toggle
+const checkLikeStatus = (menuId) => apiClient.get(`/menus/${menuId}/check-like`);
+const getUserLikes = () => apiClient.get('/user/likes');
+
+export { getAllFood, getFoodCategories,likeMenu, unlikeMenu, checkLikeStatus, getUserLikes };
 // Add a request interceptor to include the auth token
 apiClient.interceptors.request.use(
   (config) => {
@@ -57,23 +62,3 @@ apiClient.interceptors.response.use(
 
 export default apiClient;
 
-// import axios from 'axios';
-
-// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-// const apiClient = axios.create({
-//   baseURL: API_BASE_URL,
-//   headers: {
-//     'Content-Type': 'application/json',
-// },
-// });
-
-// // Add a request interceptor to include the auth token
-// apiClient.interceptors.request.use((config) => {
-//   const token = localStorage.getItem('authToken');
-//   if (token) {
-//       config.headers.Authorization = `Bearer ${token}`;
-//   }
-//   return config;
-// });
-
-// export default apiClient;

@@ -51,4 +51,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Cart::class);
     }
+
+    // In App\Models\User.php
+    public function likedMenus()
+    {
+        return $this->belongsToMany(Menu::class, 'menu_user_likes')->withTimestamps();
+    }
 }

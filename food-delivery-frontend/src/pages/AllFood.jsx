@@ -1,10 +1,16 @@
 import React, { useEffect, useState } from "react";
-import apiClient from "../api/apiClient";
+import apiClient, {
+  likeMenu,
+  unlikeMenu,
+  checkLikeStatus,
+} from "../api/apiClient";
 import { useNotify } from "../NotifyContextProvider";
 import { Link, useNavigate } from "react-router-dom";
 import LoadingAnimation from "../components/LoadingAnimation";
 
 const AllFood = () => {
+  const [likedItems, setLikedItems] = useState({}); // { menuId: true/false }
+  const [likesCount, setLikesCount] = useState({}); // { menuId: count }
   const navigate = useNavigate();
   const [menuData, setMenuData] = useState({
     items: [],
@@ -45,7 +51,70 @@ const AllFood = () => {
     fetchData();
   }, []);
 
-  const fetchMenuItems = async (page = 1, category = selectedCategory, search = searchTerm) => {
+  useEffect(() => {
+    const checkInitialLikes = async () => {
+      try {
+        // For each menu item, check if it's liked
+        const likesPromises = menuData.items.map((item) =>
+          checkLikeStatus(item.id).then((res) => ({
+            id: item.id,
+            isLiked: res.data.is_liked,
+            count: res.data.likes_count,
+          }))
+        );
+
+        const likesResults = await Promise.all(likesPromises);
+
+        const newLikedItems = {};
+        const newLikesCount = {};
+
+        likesResults.forEach((result) => {
+          newLikedItems[result.id] = result.isLiked;
+          newLikesCount[result.id] = result.count;
+        });
+
+        setLikedItems(newLikedItems);
+        setLikesCount(newLikesCount);
+      } catch (err) {
+        console.error("Error checking likes:", err);
+      }
+    };
+
+    if (menuData.items.length > 0) {
+      checkInitialLikes();
+    }
+  }, [menuData.items]);
+
+  // Add this function to handle like toggle
+  const handleLikeToggle = async (menuId) => {
+    try {
+      const isCurrentlyLiked = likedItems[menuId];
+
+      if (isCurrentlyLiked) {
+        await unlikeMenu(menuId);
+        setLikedItems((prev) => ({ ...prev, [menuId]: false }));
+        setLikesCount((prev) => ({ ...prev, [menuId]: prev[menuId] - 1 }));
+      } else {
+        await likeMenu(menuId);
+        setLikedItems((prev) => ({ ...prev, [menuId]: true }));
+        setLikesCount((prev) => ({
+          ...prev,
+          [menuId]: (prev[menuId] || 0) + 1,
+        }));
+      }
+    } catch (err) {
+      console.error("Error toggling like:", err);
+      if (err.response?.status === 401) {
+        setNotification("Please login to like items", "error");
+        navigate("/login");
+      }
+    }
+  };
+  const fetchMenuItems = async (
+    page = 1,
+    category = selectedCategory,
+    search = searchTerm
+  ) => {
     try {
       const params = {
         page,
@@ -122,8 +191,8 @@ const AllFood = () => {
 
   if (loading) {
     return (
-    //   <div className="flex justify-center items-center h-64">Loading...</div>
-      <LoadingAnimation/>
+      //   <div className="flex justify-center items-center h-64">Loading...</div>
+      <LoadingAnimation />
     );
   }
 
@@ -228,6 +297,41 @@ const AllFood = () => {
                       <span className="font-bold text-purple-600">
                         {item.price} DH
                       </span>
+                    </div>
+
+                    {/* like  */}
+                    <div className="absolute top-2 right-2 z-10">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLikeToggle(item.id);
+                        }}
+                        className="p-2 rounded-full bg-white bg-opacity-80 hover:bg-opacity-100 transition-all"
+                        aria-label={likedItems[item.id] ? "Unlike" : "Like"}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className={`h-6 w-6 ${
+                            likedItems[item.id]
+                              ? "text-red-500 fill-current"
+                              : "text-gray-400"
+                          }`}
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={likedItems[item.id] ? 0 : 2}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                          />
+                        </svg>
+                      </button>
+                      {likesCount[item.id] > 0 && (
+                        <span className="absolute -bottom-1 -right-1 bg-white text-xs px-1 rounded-full">
+                          {likesCount[item.id]}
+                        </span>
+                      )}
                     </div>
 
                     {/* <p className="text-sm text-gray-600 mt-2 line-clamp-2">

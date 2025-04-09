@@ -15,7 +15,7 @@ class Menu extends Model
         'price',
         'description',
         'category',
-        'image_path', 
+        'image_path',
         // 'image_url'
     ];
 
@@ -32,5 +32,11 @@ class Menu extends Model
     public function carts()
     {
         return $this->hasMany(Cart::class);
+    }
+
+    // In App\Models\Menu.php
+    public function likes()
+    {
+        return $this->belongsToMany(User::class, 'menu_user_likes')->withTimestamps();
     }
 }

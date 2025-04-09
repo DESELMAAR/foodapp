@@ -14,7 +14,8 @@ class MenuController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Menu::query();
+            // $query = Menu::query();
+            $query = Menu::query()->withCount('likes');
           
             if ($request->has('restaurant_id')) {
                 $query->where('restaurant_id', $request->input('restaurant_id'));
@@ -104,7 +105,9 @@ class MenuController extends Controller
     public function show($id)
     {
         try {
-            $menu = Menu::with('restaurant:id,name')->findOrFail($id);
+            // $menu = Menu::with('restaurant:id,name')->findOrFail($id);
+            $menu = Menu::with(['restaurant:id,name', 'likes'])->withCount('likes')->findOrFail($id);
+
             
             // Add the full URL to the response
             if ($menu->image_path) {

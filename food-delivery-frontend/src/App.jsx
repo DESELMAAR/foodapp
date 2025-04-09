@@ -12,6 +12,7 @@ import RestaurantManager from "./pages/RestaurantManager";
 import { ContextProvider, useNotify } from "./NotifyContextProvider";
 import CheckoutPage from "./pages/CheckoutPage";
 import AllFood from "./pages/AllFood";
+import LikedItems from "./pages/LikedItems";
 
 const App = () => {
   const { setNotification, notification, setLoad } = useNotify();
@@ -59,6 +60,15 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <CheckoutPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/liked-items"
+              element={
+                <ProtectedRoute>
+                  <LikedItems />
                 </ProtectedRoute>
               }
             />

@@ -16,9 +16,13 @@ class AllFoodController extends Controller
     public function index(Request $request)
     {
         try {
+            // $query = Menu::with(['restaurant:id,name'])
+            //     ->select('id', 'restaurant_id', 'name', 'description', 'price', 'category', 'image_path');
+
             $query = Menu::with(['restaurant:id,name'])
+                ->withCount('likes')
                 ->select('id', 'restaurant_id', 'name', 'description', 'price', 'category', 'image_path');
-            
+
             // Apply filters if provided
             if ($request->has('category')) {
                 $query->where('category', $request->input('category'));
@@ -26,9 +30,9 @@ class AllFoodController extends Controller
 
             if ($request->has('search')) {
                 $searchTerm = '%' . $request->input('search') . '%';
-                $query->where(function($q) use ($searchTerm) {
+                $query->where(function ($q) use ($searchTerm) {
                     $q->where('name', 'like', $searchTerm)
-                      ->orWhere('description', 'like', $searchTerm);
+                        ->orWhere('description', 'like', $searchTerm);
                 });
             }
 

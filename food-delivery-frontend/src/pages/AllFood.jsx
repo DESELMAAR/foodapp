@@ -9,8 +9,8 @@ import { Link, useNavigate } from "react-router-dom";
 import LoadingAnimation from "../components/LoadingAnimation";
 
 const AllFood = () => {
-  const [likedItems, setLikedItems] = useState({}); // { menuId: true/false }
-  const [likesCount, setLikesCount] = useState({}); // { menuId: count }
+  const [likedItems, setLikedItems] = useState({});
+  const [likesCount, setLikesCount] = useState({});
   const navigate = useNavigate();
   const [menuData, setMenuData] = useState({
     items: [],
@@ -25,20 +25,17 @@ const AllFood = () => {
   const [error, setError] = useState(null);
   const [quantities, setQuantities] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCity, setSelectedCity] = useState("all");
   const { setNotification } = useNotify();
+
+  const cities = ["all", "kenitra", "Rabat", "Casa", "tanger"];
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-
-        // Fetch categories
-        const categoriesResponse = await apiClient.get(
-          "/v1/all-food/categories"
-        );
+        const categoriesResponse = await apiClient.get("/v1/all-food/categories");
         setCategories(categoriesResponse.data.data);
-
-        // Fetch initial menu items
         await fetchMenuItems();
       } catch (err) {
         setError("Failed to load data.");
@@ -54,7 +51,6 @@ const AllFood = () => {
   useEffect(() => {
     const checkInitialLikes = async () => {
       try {
-        // For each menu item, check if it's liked
         const likesPromises = menuData.items.map((item) =>
           checkLikeStatus(item.id).then((res) => ({
             id: item.id,
@@ -85,7 +81,6 @@ const AllFood = () => {
     }
   }, [menuData.items]);
 
-  // Add this function to handle like toggle
   const handleLikeToggle = async (menuId) => {
     try {
       const isCurrentlyLiked = likedItems[menuId];
@@ -110,10 +105,12 @@ const AllFood = () => {
       }
     }
   };
+
   const fetchMenuItems = async (
     page = 1,
     category = selectedCategory,
-    search = searchTerm
+    search = searchTerm,
+    city = selectedCity
   ) => {
     try {
       const params = {
@@ -121,6 +118,7 @@ const AllFood = () => {
         per_page: menuData.perPage,
         ...(category !== "all" && { category }),
         ...(search && { search }),
+        ...(city !== "all" && { city }),
       };
 
       const response = await apiClient.get("/v1/all-food", { params });
@@ -141,17 +139,22 @@ const AllFood = () => {
 
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);
-    fetchMenuItems(1, category, searchTerm);
+    fetchMenuItems(1, category, searchTerm, selectedCity);
+  };
+
+  const handleCityChange = (city) => {
+    setSelectedCity(city);
+    fetchMenuItems(1, selectedCategory, searchTerm, city);
   };
 
   const handlePageChange = (page) => {
-    fetchMenuItems(page, selectedCategory, searchTerm);
+    fetchMenuItems(page, selectedCategory, searchTerm, selectedCity);
   };
 
   const handleSearch = (e) => {
     const term = e.target.value;
     setSearchTerm(term);
-    fetchMenuItems(1, selectedCategory, term);
+    fetchMenuItems(1, selectedCategory, term, selectedCity);
   };
 
   const handleIncrement = (itemId) => {
@@ -190,10 +193,7 @@ const AllFood = () => {
   };
 
   if (loading) {
-    return (
-      //   <div className="flex justify-center items-center h-64">Loading...</div>
-      <LoadingAnimation />
-    );
+    return <LoadingAnimation />;
   }
 
   if (error) {
@@ -202,20 +202,33 @@ const AllFood = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-6 text-center caveat">
-        All Available Menu Items
-      </h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold caveat">All Available Menu Items</h1>
+        <div className="flex gap-2">
+          <select
+            value={selectedCity}
+            onChange={(e) => handleCityChange(e.target.value)}
+            className="rounded-full bg-gray-200 px-4 py-2 hover:bg-gray-300 transition-colors"
+          >
+            {cities.map((city) => (
+              <option key={city} value={city}>
+                {city === "all" ? "All Cities" : city}
+              </option>
+            ))}
+          </select>
+          <Link
+            to="/foods"
+            className="px-4 py-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
+          >
+            Restaurants
+          </Link>
+        </div>
+      </div>
 
       <div className="grid grid-cols-[180px_1fr] gap-4">
         {/* Categories Sidebar */}
         <div>
           <div className="flex flex-col gap-2">
-            <Link
-              to="/foods"
-              className="px-4 py-2 rounded-full bg-gray-200 text-center hover:bg-gray-300 transition-colors"
-            >
-              Restaurants
-            </Link>
             <button
               onClick={() => handleCategoryChange("all")}
               className={`px-4 py-2 rounded-full text-center ${
@@ -284,10 +297,8 @@ const AllFood = () => {
                     minHeight: "300px",
                   }}
                 >
-                  {/* Hover overlay */}
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300"></div>
 
-                  {/* Content card */}
                   <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-90 pb-1 pl-1 pr-1 transform translate-y-10 group-hover:translate-y-0 transition-all duration-300">
                     <div className="flex justify-between items-start">
                       <div>
@@ -299,7 +310,6 @@ const AllFood = () => {
                       </span>
                     </div>
 
-                    {/* like  */}
                     <div className="absolute top-2 right-2 z-10">
                       <button
                         onClick={(e) => {
@@ -333,10 +343,6 @@ const AllFood = () => {
                         </span>
                       )}
                     </div>
-
-                    {/* <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-                      {item.description}
-                    </p> */}
 
                     <div className="mt-4 flex items-center justify-between">
                       <div className="flex items-center">
@@ -398,7 +404,6 @@ const AllFood = () => {
         </div>
       </div>
 
-      {/* Pagination */}
       {menuData.totalPages > 1 && (
         <div className="flex justify-center items-center gap-2 mt-6">
           <button
@@ -446,7 +451,6 @@ const AllFood = () => {
         </div>
       )}
 
-      {/* Items count */}
       <div className="text-center mt-4 text-gray-600">
         Showing {menuData.items.length} of {menuData.totalItems} items
       </div>

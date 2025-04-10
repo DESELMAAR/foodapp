@@ -45,7 +45,8 @@ class RestaurantController extends Controller
                 'name' => 'required|string',
                 'address' => 'required|string',
                 'phone' => 'required|string',
-                'user_id' => 'required'
+                'user_id' => 'required',
+                'city' => 'required|string|in:'.implode(',', Restaurant::ALLOWED_CITIES),
             ]);
 
             // Create the restaurant
@@ -111,6 +112,7 @@ class RestaurantController extends Controller
                 'name' => 'sometimes|string',
                 'address' => 'sometimes|string',
                 'phone' => 'sometimes|string',
+                'city' => 'required|string|in:'.implode(',', Restaurant::ALLOWED_CITIES),
             ]);
 
             // Update the restaurant

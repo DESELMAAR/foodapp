@@ -9,11 +9,19 @@ class Restaurant extends Model
 {
     use HasFactory;
 
+    const ALLOWED_CITIES = [
+        'kenitra',
+        'Rabat',
+        'Casa',
+        'tanger'
+    ];
     protected $fillable = [
         'name',
         'address',
         'phone',
-        'user_id' 
+        'user_id' ,
+        'city',
+
     ];
 
 

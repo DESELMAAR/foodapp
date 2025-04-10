@@ -127,25 +127,62 @@ const Navbar = () => {
   return (
     <div className="  sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20 px-4 sm:px-8   sticky top-0 z-50">
           {/* Left side navigation */}
           <div className="flex items-center space-x-8">
-            <Link to="/" className="text-indigo-600 font-bold text-lg caveat">
+            <Link
+              to="/"
+              className="text-indigo-600 font-bold text-xl caveat flex items-center gap-2 hover:scale-105 transition-transform"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
               FoodDelivery
             </Link>
             {isAuthenticated && user && (
-              <>
+              <div className="hidden md:flex items-center space-x-6">
                 <Link
                   to="/orders"
-                  className="text-gray-700 hover:text-indigo-600 transition-colors"
+                  className="relative text-gray-600 hover:text-indigo-600 transition-colors group"
                 >
                   Orders
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
                 </Link>
-                <Link to="/liked-items" className="flex items-center gap-2">
-                  {/* <Likes className="h-5 w-5" /> */}
-                  Liked Items
+                <Link
+                  to="/liked-items"
+                  className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors group"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 group-hover:fill-red-500 group-hover:scale-110 transition-all"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                    />
+                  </svg>
+                  <span className="relative">
+                    Liked Items
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
+                  </span>
                 </Link>
-              </>
+              </div>
             )}
           </div>
 
@@ -153,25 +190,45 @@ const Navbar = () => {
           <div className="flex items-center space-x-6">
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
-                <span className="text-gray-700 hidden sm:inline">
-                  Hello, {user.name || "User"}!
-                </span>
+                <div className="hidden sm:flex items-center space-x-2 bg-indigo-50 px-3 py-1 rounded-full">
+                  <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
+                    {user.name?.charAt(0).toUpperCase() || "U"}
+                  </div>
+                  <span className="text-gray-700 font-medium">
+                    Hello, {user.name || "User"}!
+                  </span>
+                </div>
+
                 <button
                   onClick={handleLogout}
-                  className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-1 rounded-full text-sm hover:shadow-md transition-all"
+                  className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-full text-sm hover:shadow-lg hover:from-indigo-700 hover:to-purple-700 transition-all flex items-center gap-1"
                 >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                    />
+                  </svg>
                   Logout
                 </button>
 
                 {/* Cart Icon */}
-                <div className="relative ml-4">
+                <div className="relative ml-2">
                   <button
                     onClick={handleClickCartIcon}
-                    className="p-1 text-gray-700 hover:text-indigo-600 focus:outline-none"
+                    className="p-2 text-gray-700 hover:text-indigo-600 focus:outline-none relative group"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-6 w-6"
+                      className="h-6 w-6 group-hover:scale-110 transition-transform"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -184,7 +241,7 @@ const Navbar = () => {
                       />
                     </svg>
                     {cartCount > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
                         {cartCount}
                       </span>
                     )}
@@ -195,14 +252,28 @@ const Navbar = () => {
               <div className="flex items-center space-x-4">
                 <Link
                   to="/login"
-                  className="text-gray-700 hover:text-indigo-600 transition-colors"
+                  className="text-gray-600 hover:text-indigo-600 transition-colors font-medium px-3 py-1.5 rounded-lg hover:bg-indigo-50"
                 >
                   Login
                 </Link>
                 <Link
                   to="/register"
-                  className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-1 rounded-full text-sm hover:shadow-md transition-all"
+                  className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-full text-sm hover:shadow-lg hover:from-indigo-700 hover:to-purple-700 transition-all flex items-center gap-1"
                 >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                    />
+                  </svg>
                   Register
                 </Link>
               </div>

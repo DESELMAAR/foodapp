@@ -64,7 +64,7 @@ const LikedItems = () => {
 
   return (
     <div className="p-4 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Your Liked Menu Items</h1>
+      <h1 className="text-2xl font-bold caveat text-indigo-600 mb-6">My Liked Menu Items</h1>
       
       {likedMenus.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -129,7 +129,7 @@ const LikedItems = () => {
           <p className="text-gray-500">You haven't liked any items yet</p>
           <button 
             className="mt-4 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
-            onClick={() => navigate('/menus')}
+            onClick={() => navigate('/foods')}
           >
             Browse Menus
           </button>
